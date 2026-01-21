@@ -99,6 +99,8 @@
     "bbs.config.editor.minutes_backup-comment": "The data will be saved every 10 minutes instead of every hour",
     "bbs.config.editor.periodic_save": "Pereodic save",
     "bbs.config.editor.periodic_save-comment": "Number of seconds that triggers automatic save repeatedly. To disable periodic saving, set the option to 0",
+    "bbs.config.editor.pose_per_limb": "Per-limb pose editing (development only)",
+    "bbs.config.editor.pose_per_limb-comment": "!CRASH WARNING! When enabled, pose keyframes can be expanded to edit individual bones and properties (like position, rotation, color, etc.) in the graph editor.",
     "bbs.config.editor.rewind": "Rewind",
     "bbs.config.editor.rewind-comment": "Whether the playback should be rewound to beginning upon finishing playing the film",
     "bbs.config.editor.rule_of_thirds": "Rule of thirds",

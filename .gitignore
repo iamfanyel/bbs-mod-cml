@@ -43,3 +43,10 @@ replay_*.log
 
 # wiki
 bbs-mod-wiki.wiki/
+
+#trae
+.trae/
+
+#blockbench
+blockbench/
+blockbench_full/

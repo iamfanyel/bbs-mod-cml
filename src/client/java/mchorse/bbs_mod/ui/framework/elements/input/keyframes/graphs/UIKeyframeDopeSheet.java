@@ -7,6 +7,7 @@ import mchorse.bbs_mod.data.types.MapType;
 import mchorse.bbs_mod.graphics.window.Window;
 import mchorse.bbs_mod.ui.forms.editors.utils.UIStructureOverlayPanel;
 import mchorse.bbs_mod.ui.framework.UIContext;
+import mchorse.bbs_mod.ui.framework.elements.input.keyframes.PoseKeyframeUtils;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
@@ -18,6 +19,7 @@ import mchorse.bbs_mod.ui.utils.Area;
 import mchorse.bbs_mod.ui.utils.Scale;
 import mchorse.bbs_mod.ui.utils.Scroll;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
+import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.CollectionUtils;
 import mchorse.bbs_mod.utils.MathUtils;
 import mchorse.bbs_mod.utils.Pair;
@@ -298,7 +300,69 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
     @Override
     public boolean mouseClicked(UIContext context)
     {
+        if (this.keyframes.area.isInside(context))
+        {
+            int dopeSheetY = this.getDopeSheetY();
+            int index = (context.mouseY - dopeSheetY) / (int) this.trackHeight;
+
+            if (index >= 0 && index < this.sheets.size())
+                {
+                    UIKeyframeSheet sheet = this.sheets.get(index);
+                    boolean isPose = sheet.channel.getFactory() instanceof mchorse.bbs_mod.utils.keyframes.factories.PoseKeyframeFactory || sheet.channel instanceof PoseKeyframeUtils.VirtualPoseTransformChannel;
+
+                    if (mchorse.bbs_mod.BBSSettings.editorPosePerLimb.get() && (isPose || !sheet.children.isEmpty()))
+                    {
+                        int x = this.keyframes.area.ex() - 16;
+                        int y = dopeSheetY + index * (int) this.trackHeight + (int) this.trackHeight / 2 - 4;
+
+                        if (context.mouseX >= x && context.mouseX < x + 16 && context.mouseY >= y && context.mouseY < y + 8)
+                        {
+                            this.toggleExpand(sheet, index);
+                            return true;
+                        }
+                    }
+                }
+        }
+
         return this.dopeSheet.mouseClicked(context);
+    }
+
+    private void toggleExpand(UIKeyframeSheet sheet, int index)
+    {
+        sheet.collapsed = !sheet.collapsed;
+
+        if (!sheet.collapsed)
+        {
+            if (sheet.children.isEmpty())
+                {
+                    PoseKeyframeUtils.generateChildren(sheet);
+                }
+
+            this.sheets.addAll(index + 1, sheet.children);
+            
+            // Adjust scroll size
+            this.setTrackHeight(this.trackHeight);
+        }
+        else
+        {
+            this.removeAllChildren(sheet);
+            
+            // Adjust scroll size
+            this.setTrackHeight(this.trackHeight);
+        }
+    }
+
+    private void removeAllChildren(UIKeyframeSheet sheet)
+    {
+        for (UIKeyframeSheet child : sheet.children)
+        {
+            if (!child.collapsed)
+            {
+                this.removeAllChildren(child);
+            }
+            
+            this.sheets.remove(child);
+        }
     }
 
     @Override
@@ -568,13 +632,9 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
 
             context.batcher.fillRect(builder, matrix, area.x, my - 1, area.w, 2, cc, cc, cc, cc);
 
-            if (sheet.separator)
-            {
-                int c = Colors.setA(sheet.color, 0F);
-
-                /* Render separator */
-                context.batcher.fillRect(builder, matrix, area.x, y, area.w, (int) this.trackHeight, c | Colors.A25, c | Colors.A25, c, c);
-            }
+            /* Render expand icon */
+            boolean isPose = sheet.channel.getFactory() instanceof mchorse.bbs_mod.utils.keyframes.factories.PoseKeyframeFactory || sheet.channel instanceof PoseKeyframeUtils.VirtualPoseTransformChannel;
+            boolean hasExpand = mchorse.bbs_mod.BBSSettings.editorPosePerLimb.get() && (isPose || !sheet.children.isEmpty());
 
             /* Render bars indicating same values */
             for (int j = 1; j < keyframes.size(); j++)
@@ -680,16 +740,24 @@ public class UIKeyframeDopeSheet implements IUIKeyframeGraph
                 displayTitle = baseTitle;
             }
             int lw = font.getWidth(displayTitle);
+            int iconW = hasExpand ? 16 : 0;
 
-            context.batcher.gradientHBox(area.ex() - lw - 10, y, area.ex(), y + (int) this.trackHeight, sheet.color, sheet.color | (hover ? Colors.A75 : Colors.A25));
+            context.batcher.gradientHBox(area.ex() - lw - 10 - iconW, y, area.ex(), y + (int) this.trackHeight, sheet.color, sheet.color | (hover ? Colors.A75 : Colors.A25));
 
             if (hover)
             {
-                context.batcher.textShadow(displayTitle, area.ex() - lw - 5, my - font.getHeight() / 2);
+                context.batcher.textShadow(displayTitle, area.ex() - lw - 5 - iconW, my - font.getHeight() / 2);
             }
             else
             {
-                context.batcher.text(displayTitle, area.ex() - lw - 5, my - font.getHeight() / 2, Colors.WHITE & 0x88ffffff);
+                context.batcher.text(displayTitle, area.ex() - lw - 5 - iconW, my - font.getHeight() / 2, Colors.WHITE & 0x88ffffff);
+            }
+
+            if (hasExpand)
+            {
+                Icon icon = sheet.collapsed ? Icons.MOVE_UP : Icons.MOVE_DOWN;
+
+                context.batcher.icon(icon, area.ex() - 16, my - 4);
             }
 
             Icon icon = sheet.getIcon();

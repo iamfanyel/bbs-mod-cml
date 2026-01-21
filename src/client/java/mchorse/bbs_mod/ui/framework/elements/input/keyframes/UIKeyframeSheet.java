@@ -26,6 +26,10 @@ public class UIKeyframeSheet
     public final BaseValueBasic property;
     public String anchoredBone;
 
+    public UIKeyframeSheet parent;
+    public List<UIKeyframeSheet> children = new ArrayList<>();
+    public boolean collapsed = true;
+
     public UIKeyframeSheet(int color, boolean separator, KeyframeChannel channel, BaseValueBasic property)
     {
         this(channel.getId(), IKey.constant(property != null ? FormUtils.getForm(property).getTrackName(channel.getId()) : channel.getId()), color, separator, channel, property);
