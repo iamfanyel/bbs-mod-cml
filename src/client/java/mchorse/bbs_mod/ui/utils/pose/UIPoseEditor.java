@@ -683,7 +683,7 @@ public class UIPoseEditor extends UIElement
 
         if (!isPoseTransform || this.pose == null || CollectionUtils.getKey(this.pose.transforms, (PoseTransform) transform) == null)
         {
-             this.groups.setIndex(-1);
+             this.groups.list.setIndex(-1);
         }
     }
 
