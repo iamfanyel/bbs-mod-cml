@@ -1,9 +1,11 @@
 package mchorse.bbs_mod.ui.model;
 
+import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.cubic.model.ModelConfig;
 import mchorse.bbs_mod.l10n.keys.IKey;
+import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
@@ -12,12 +14,19 @@ import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.BBSSettings;
 import mchorse.bbs_mod.ui.framework.elements.utils.UILabel;
 import mchorse.bbs_mod.ui.utils.UI;
+import mchorse.bbs_mod.ui.utils.UIUtils;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.ui.utils.pose.UIPoseEditor;
+
+import java.awt.Desktop;
+import java.io.File;
+import java.net.URL;
+import java.nio.file.Paths;
 
 public class UIModelPartsSection extends UIModelSection
 {
     public UIButton texture;
+    public UIButton openModel;
     public UIColor color;
     public UIPoseEditor poseEditor;
 
@@ -34,6 +43,104 @@ public class UIModelPartsSection extends UIModelSection
                     this.config.texture.set(l);
                     this.editor.dirty();
                 });
+            }
+        });
+
+        this.openModel = new UIButton(UIKeys.FORMS_EDITOR_MODEL_OPEN_IN, (b) ->
+        {
+            if (this.config == null)
+            {
+                return;
+            }
+
+            String modelId = this.config.getId();
+            Link modelLink = Link.assets("models/" + modelId);
+            File folder = BBSMod.getProvider().getFile(modelLink);
+
+            if ((folder == null || !folder.exists()) && BBSMod.class.getClassLoader() != null)
+            {
+                URL url = BBSMod.class.getClassLoader().getResource("assets/bbs/assets/models/" + modelId);
+
+                if (url != null)
+                {
+                    try
+                    {
+                        File f = Paths.get(url.toURI()).toFile();
+
+                        if (f.exists() && f.isDirectory())
+                        {
+                            folder = f;
+                        }
+                    }
+                    catch (Exception e)
+                    {}
+                }
+            }
+
+            if (folder != null && folder.isDirectory())
+            {
+                File target = null;
+                File[] files = folder.listFiles();
+
+                if (files != null)
+                {
+                    for (File f : files)
+                    {
+                        if (f.getName().endsWith(".bbmodel"))
+                        {
+                            target = f;
+                            break;
+                        }
+                    }
+
+                    if (target == null)
+                    {
+                        for (File f : files)
+                        {
+                            if (f.getName().endsWith(".geo.json"))
+                            {
+                                target = f;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (target == null)
+                    {
+                        for (File f : files)
+                        {
+                            if (f.getName().equals("model.json"))
+                            {
+                                target = f;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (target == null)
+                    {
+                        for (File f : files)
+                        {
+                            if (f.getName().endsWith(".json") && !f.getName().equals("config.json"))
+                            {
+                                target = f;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (target != null)
+                {
+                    try
+                    {
+                        Desktop.getDesktop().open(target);
+                    }
+                    catch (Throwable e)
+                    {
+                        UIUtils.openFolder(target);
+                    }
+                }
             }
         });
 
@@ -62,6 +169,7 @@ public class UIModelPartsSection extends UIModelSection
         };
         this.poseEditor.prepend(this.color);
         this.poseEditor.prepend(this.texture);
+        this.poseEditor.prepend(this.openModel);
 
         UILabel partsLabel = UI.label(UIKeys.MODELS_PARTS).background(() -> Colors.A50 | BBSSettings.primaryColor.get());
         this.poseEditor.prepend(partsLabel);
