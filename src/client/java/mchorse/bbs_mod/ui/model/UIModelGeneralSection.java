@@ -2,17 +2,12 @@ package mchorse.bbs_mod.ui.model;
 
 import mchorse.bbs_mod.cubic.model.ModelConfig;
 import mchorse.bbs_mod.l10n.keys.IKey;
-import mchorse.bbs_mod.ui.ContentType;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
-import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
-import mchorse.bbs_mod.ui.framework.elements.overlay.UIStringOverlayPanel;
 import mchorse.bbs_mod.ui.utils.UI;
-import mchorse.bbs_mod.ui.utils.UIDataUtils;
-import mchorse.bbs_mod.ui.utils.icons.Icons;
 import org.joml.Vector3f;
 
 public class UIModelGeneralSection extends UIModelSection
@@ -61,22 +56,6 @@ public class UIModelGeneralSection extends UIModelSection
             }
         });
         this.poseGroup.tooltip(UIKeys.MODELS_POSE_GROUP_TOOLTIP);
-
-        UIIcon poseGroupPicker = new UIIcon(Icons.SEARCH, (b) ->
-        {
-            if (this.config == null) return;
-
-            UIDataUtils.requestNames(ContentType.MODELS, (names) ->
-            {
-                UIStringOverlayPanel panel = new UIStringOverlayPanel(UIKeys.MODELS_POSE_GROUP, true, names, (str) ->
-                {
-                    this.poseGroup.setText(str);
-                    if (this.config != null) this.config.poseGroup.set(str);
-                });
-                this.editor.add(panel);
-            });
-        });
-        poseGroupPicker.tooltip(UIKeys.GENERAL_SEARCH);
         
         this.anchorGroup = new UITextbox(1000, (str) ->
         {
@@ -98,7 +77,7 @@ public class UIModelGeneralSection extends UIModelSection
         this.scaleY.tooltip(IKey.constant("Y"));
         this.scaleZ.tooltip(IKey.constant("Z"));
 
-        UIElement poseGroupRow = UI.row(this.poseGroup, poseGroupPicker);
+        UIElement poseGroupRow = UI.row(this.poseGroup);
         UIElement scaleRow = UI.row(this.scaleX, this.scaleY, this.scaleZ);
         
         this.fields.add(this.procedural, this.culling);

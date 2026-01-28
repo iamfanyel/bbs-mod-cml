@@ -47,6 +47,7 @@ public class UIPoseEditor extends UIElement
     private static String lastLimb = "";
 
     public UISearchList<String> groups;
+    public UIElement extra;
     public UIStringList groupsList;
     public UIStringList categories;
     public UITrackpad fix;
@@ -67,6 +68,9 @@ public class UIPoseEditor extends UIElement
 
     public UIPoseEditor()
     {
+        this.extra = new UIElement();
+        this.extra.column().vertical().stretch();
+
         this.groupsList = new UIStringList((l) -> this.pickBone(l.get(0)));
         this.groups = new UISearchList<>(this.groupsList);
         this.groups.label(UIKeys.GENERAL_SEARCH);
@@ -352,11 +356,11 @@ public class UIPoseEditor extends UIElement
         boolean categoriesEnabled = BBSSettings.modelBlockCategoriesPanelEnabled != null && BBSSettings.modelBlockCategoriesPanelEnabled.get();
         if (categoriesEnabled)
         {
-            this.add(UI.row(this.groups, this.categories), UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
+            this.add(UI.row(this.groups, this.categories), this.extra, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
         }
         else
         {
-            this.add(this.groups, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
+            this.add(this.groups, this.extra, UI.label(UIKeys.POSE_CONTEXT_FIX), this.fix, this.pickTexture, UI.row(this.color, this.lighting), this.transform);
         }
     }
 

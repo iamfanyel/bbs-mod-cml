@@ -1,5 +1,7 @@
 package mchorse.bbs_mod.cubic.model;
 
+import mchorse.bbs_mod.cubic.model.ArmorConfig;
+import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.core.ValueGroup;
 import mchorse.bbs_mod.settings.values.core.ValueLink;
@@ -34,7 +36,21 @@ public class ModelConfig extends ValueGroup
         @Override
         protected ValueString create(String id)
         {
-            return new ValueString(id, "");
+            return new ValueString(id, "")
+            {
+                @Override
+                public void fromData(BaseType data)
+                {
+                    if (data.isMap())
+                    {
+                        this.value = data.asMap().getString("group");
+                    }
+                    else
+                    {
+                        super.fromData(data);
+                    }
+                }
+            };
         }
     };
     
@@ -43,7 +59,21 @@ public class ModelConfig extends ValueGroup
         @Override
         protected ValueString create(String id)
         {
-            return new ValueString(id, "");
+            return new ValueString(id, "")
+            {
+                @Override
+                public void fromData(BaseType data)
+                {
+                    if (data.isMap())
+                    {
+                        this.value = data.asMap().getString("group");
+                    }
+                    else
+                    {
+                        super.fromData(data);
+                    }
+                }
+            };
         }
     };
 

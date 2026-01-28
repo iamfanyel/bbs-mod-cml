@@ -1397,8 +1397,8 @@
     "bbs.ui.models.ui_scale": "UI Scale",
     "bbs.ui.models.items.add": "Add Item Group",
     "bbs.ui.models.items.add_desc": "Add a new item group to the list.",
-    "bbs.ui.models.items.main": "Main Hand Items",
-    "bbs.ui.models.items.off": "Off Hand Items",
+    "bbs.ui.models.items.main": "Main hand",
+    "bbs.ui.models.items.off": "Off hand",
     "bbs.ui.models.sneaking_pose.context": "Copy/Paste Sneaking Pose",
     "bbs.ui.models.sneaking_pose.desc": "Configure the sneaking pose for procedural animation."
 }

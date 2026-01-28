@@ -10,6 +10,7 @@ import mchorse.bbs_mod.settings.values.core.ValueString;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.framework.elements.context.UIContextMenu;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UISearchList;
@@ -29,8 +30,8 @@ import java.util.function.Consumer;
 
 public class UIModelItemsSection extends UIModelSection
 {
-    private UIStringList mainList;
-    private UIStringList offList;
+    private UIButton mainButton;
+    private UIButton offButton;
 
     public UIModelItemsSection(UIModelPanel editor)
     {
@@ -38,16 +39,10 @@ public class UIModelItemsSection extends UIModelSection
 
         this.title.label = UIKeys.MODELS_ITEMS;
 
-        this.mainList = new UIStringList(null);
-        this.mainList.background = 0x88000000;
-        this.offList = new UIStringList(null);
-        this.offList.background = 0x88000000;
+        this.mainButton = new UIButton(UIKeys.MODELS_ITEMS_MAIN, (b) -> this.openContextMenu(this.config.itemsMain));
+        this.offButton = new UIButton(UIKeys.MODELS_ITEMS_OFF, (b) -> this.openContextMenu(this.config.itemsOff));
 
-        UIElement mainCol = this.createListColumn(UIKeys.MODELS_ITEMS_MAIN, this.mainList, () -> this.config.itemsMain);
-        UIElement offCol = this.createListColumn(UIKeys.MODELS_ITEMS_OFF, this.offList, () -> this.config.itemsOff);
-
-        this.fields.add(UI.row(mainCol, offCol));
-        this.fields.h(120); // Fixed height for lists
+        this.fields.add(UI.row(this.mainButton, this.offButton));
     }
 
     @Override
@@ -56,117 +51,103 @@ public class UIModelItemsSection extends UIModelSection
         return UIKeys.MODELS_ITEMS;
     }
 
-    private void updateLists()
+    private void openContextMenu(ValueList<ValueString> valueList)
     {
-        java.util.List<String> main = new java.util.ArrayList<>();
-        java.util.List<String> off = new java.util.ArrayList<>();
-
-        for (ValueString value : this.config.itemsMain.getList())
+        if (this.config == null)
         {
-            main.add(value.get());
+            return;
         }
 
-        for (ValueString value : this.config.itemsOff.getList())
+        ModelInstance model = BBSModClient.getModels().getModel(this.config.getId());
+
+        if (model == null)
         {
-            off.add(value.get());
+            return;
         }
 
-        this.mainList.setList(main);
-        this.offList.setList(off);
-    }
+        List<String> groups = new ArrayList<>(model.getModel().getAllGroupKeys());
+        Collections.sort(groups);
+        groups.add(0, "<none>");
 
-    private UIElement createListColumn(IKey label, UIStringList list, java.util.function.Supplier<ValueList<ValueString>> valueSupplier)
-    {
-        UIElement column = new UIElement();
-        column.column(5).stretch().vertical();
-
-        UILabel labelElement = new UILabel(label);
-        
-        UIIcon add = new UIIcon(Icons.ADD, (b) ->
+        UIStringListContextMenu menu = new UIStringListContextMenu(groups, () ->
         {
-            if (this.config == null)
+            List<String> list = new ArrayList<>();
+
+            for (ValueString value : valueList.getList())
             {
-                return;
+                list.add(value.get());
             }
 
-            ModelInstance model = BBSModClient.getModels().getModel(this.config.getId());
-
-            if (model == null)
+            return list;
+        }, (group) ->
+        {
+            if (group.equals("<none>"))
             {
-                return;
+                valueList.getAllTyped().clear();
             }
-
-            List<String> groups = new ArrayList<>(model.getModel().getAllGroupKeys());
-            Collections.sort(groups);
-            groups.add(0, "<none>");
-
-            UIStringListContextMenu menu = new UIStringListContextMenu(groups, () -> list.getList(), (group) ->
+            else
             {
-                ValueList<ValueString> valueList = valueSupplier.get();
+                boolean exists = false;
+                int index = -1;
+                int i = 0;
 
-                if (group.equals("<none>"))
+                for (ValueString value : valueList.getList())
                 {
-                    valueList.getAllTyped().clear();
+                    if (value.get().equals(group))
+                    {
+                        exists = true;
+                        index = i;
+                        break;
+                    }
+
+                    i++;
+                }
+
+                if (exists)
+                {
+                    valueList.getAllTyped().remove(index);
                 }
                 else
                 {
-                    boolean exists = false;
-                    int index = -1;
-                    int i = 0;
-
-                    for (ValueString value : valueList.getList())
-                    {
-                        if (value.get().equals(group))
-                        {
-                            exists = true;
-                            index = i;
-                            break;
-                        }
-
-                        i++;
-                    }
-
-                    if (exists)
-                    {
-                        valueList.getAllTyped().remove(index);
-                    }
-                    else
-                    {
-                        valueList.add(new ValueString(String.valueOf(valueList.getList().size()), group));
-                    }
+                    /* Only one limb is allowed */
+                    valueList.getAllTyped().clear();
+                    valueList.add(new ValueString(String.valueOf(valueList.getList().size()), group));
                 }
+            }
 
-                this.updateLists();
-                this.editor.dirty();
-            });
-
-            this.getContext().replaceContextMenu(menu);
+            this.editor.dirty();
+            this.updateButtons();
         });
-        
-        UIElement icons = UI.row(add);
-        icons.h(20);
 
-        column.add(labelElement, list, icons);
+        this.getContext().replaceContextMenu(menu);
+    }
 
-        return column;
+    private void updateButtons()
+    {
+        if (this.config == null)
+        {
+            return;
+        }
+
+        this.updateButton(this.mainButton, this.config.itemsMain, UIKeys.MODELS_ITEMS_MAIN);
+        this.updateButton(this.offButton, this.config.itemsOff, UIKeys.MODELS_ITEMS_OFF);
+    }
+
+    private void updateButton(UIButton button, ValueList<ValueString> list, IKey defaultLabel)
+    {
+        button.label = defaultLabel;
     }
 
     @Override
     public void deselect()
-    {
-        this.mainList.deselect();
-        this.offList.deselect();
-    }
+    {}
 
     @Override
     public void setConfig(ModelConfig config)
     {
         super.setConfig(config);
 
-        if (config != null)
-        {
-            this.updateLists();
-        }
+        this.updateButtons();
     }
 
     public static class UIStringListContextMenu extends UIContextMenu

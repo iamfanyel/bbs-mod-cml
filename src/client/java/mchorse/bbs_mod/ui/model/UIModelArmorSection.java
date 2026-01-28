@@ -7,6 +7,7 @@ import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.UIKeys;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
+import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.input.UIPropTransform;
 import mchorse.bbs_mod.ui.framework.elements.input.list.UIStringList;
 import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
@@ -17,6 +18,8 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIIcon;
 import mchorse.bbs_mod.ui.utils.UI;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.ui.utils.pose.UIPoseEditor;
+import mchorse.bbs_mod.utils.colors.Colors;
+import mchorse.bbs_mod.BBSSettings;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,8 +28,7 @@ import java.util.List;
 public class UIModelArmorSection extends UIModelSection
 {
     public UIStringList types;
-    public UILabel limbLabel;
-    public UIIcon pickBone;
+    public UIButton pickBone;
 
     private ArmorType type;
 
@@ -34,11 +36,7 @@ public class UIModelArmorSection extends UIModelSection
     {
         super(editor);
 
-        this.limbLabel = UI.label(IKey.constant("..."));
-        this.limbLabel.w(1F);
-
-        this.pickBone = new UIIcon(Icons.SEARCH, (b) -> this.openLimbMenu());
-        this.pickBone.w(20);
+        this.pickBone = new UIButton(IKey.constant("<none>"), (b) -> this.openLimbMenu());
 
         this.types = new UIStringList((l) -> this.fillData());
         this.types.background = 0x88000000;
@@ -49,11 +47,20 @@ public class UIModelArmorSection extends UIModelSection
         }
 
         this.types.sort();
+        this.types.setIndex(0);
 
-        this.fields.row(5);
-        this.types.w(1F, -25).h(9 * 16);
-        this.pickBone.wh(20, 20);
-        this.fields.add(this.types, this.pickBone);
+        this.fields.add(this.pickBone);
+        this.types.h(5 * 16);
+
+        UIPoseEditor poseEditor = this.editor.getPoseEditor();
+
+        if (poseEditor != null)
+        {
+            UILabel label = UI.label(UIKeys.MODELS_ARMOR).background(() -> Colors.A50 | BBSSettings.primaryColor.get());
+            label.marginTop(12);
+
+            poseEditor.extra.add(label, this.types);
+        }
     }
 
     @Override
@@ -67,11 +74,6 @@ public class UIModelArmorSection extends UIModelSection
         }
 
         super.render(context);
-
-        if (!this.pickBone.isEnabled())
-        {
-            context.batcher.icon(Icons.LOCKED, this.pickBone.area.x + 2, this.pickBone.area.y + 2);
-        }
     }
 
     private void openLimbMenu()
@@ -94,7 +96,7 @@ public class UIModelArmorSection extends UIModelSection
 
         UIModelItemsSection.UIStringListContextMenu menu = new UIModelItemsSection.UIStringListContextMenu(groups, () ->
         {
-            String label = this.limbLabel.label.get();
+            String label = this.pickBone.label.get();
 
             return Collections.singleton(label.isEmpty() ? "<none>" : label);
         }, (group) ->
@@ -104,7 +106,7 @@ public class UIModelArmorSection extends UIModelSection
                 group = "";
             }
 
-            this.limbLabel.label = IKey.constant(group.isEmpty() ? "<none>" : group);
+            this.pickBone.label = IKey.constant(group.isEmpty() ? "<none>" : group);
 
             ArmorSlot slot = this.getSlot();
 
@@ -116,6 +118,7 @@ public class UIModelArmorSection extends UIModelSection
         });
 
         this.getContext().replaceContextMenu(menu);
+        menu.xy(this.pickBone.area.x, this.pickBone.area.ey()).w(this.pickBone.area.w).h(200).bounds(this.getContext().menu.overlay, 5);
     }
 
     private ArmorSlot getSlot()
@@ -158,7 +161,7 @@ public class UIModelArmorSection extends UIModelSection
         {
             String group = slot.group.get();
 
-            this.limbLabel.label = IKey.constant(group.isEmpty() ? "<none>" : group);
+            this.pickBone.label = IKey.constant(group.isEmpty() ? "<none>" : group);
 
             UIPoseEditor poseEditor = this.editor.getPoseEditor();
 
@@ -175,6 +178,22 @@ public class UIModelArmorSection extends UIModelSection
                 this.editor.setRight(poseEditor);
             }
         }
+    }
+
+    @Override
+    public boolean subMouseClicked(UIContext context)
+    {
+        if (this.title.area.isInside(context) && context.mouseButton == 0)
+        {
+            UIPoseEditor poseEditor = this.editor.getPoseEditor();
+
+            if (poseEditor != null)
+            {
+                this.editor.setRight(poseEditor);
+            }
+        }
+
+        return super.subMouseClicked(context);
     }
 
     @Override
